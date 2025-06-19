@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Döviz Kuru Hesaplama</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(120deg, #e0eafc 0%, #cfdef3 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 420px;
+            margin: 60px auto;
+            background: #fff;
+            padding: 36px 32px 28px 32px;
+            border-radius: 18px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+            border: 1px solid #e3e3e3;
+        }
+        h1 {
+            text-align: center;
+            color: #2d3a4b;
+            margin-bottom: 28px;
+            font-size: 2rem;
+            letter-spacing: 1px;
+        }
+        label {
+            display: block;
+            margin-top: 18px;
+            color: #3a4a5d;
+            font-weight: 500;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            margin-top: 7px;
+            border-radius: 7px;
+            border: 1px solid #bfc9d1;
+            font-size: 1rem;
+            background: #f7fafd;
+            transition: border 0.2s;
+        }
+        input:focus, select:focus {
+            border: 1.5px solid #007bff;
+            outline: none;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 28px;
+            background: linear-gradient(90deg, #007bff 0%, #00c6ff 100%);
+            color: #fff;
+            border: none;
+            border-radius: 7px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,123,255,0.08);
+            transition: background 0.2s, transform 0.1s;
+        }
+        button:hover {
+            background: linear-gradient(90deg, #0056b3 0%, #00aaff 100%);
+            transform: translateY(-2px) scale(1.03);
+        }
+        .result {
+            margin-top: 28px;
+            text-align: center;
+            font-size: 1.25rem;
+            color: #007bff;
+            background: #f0f8ff;
+            border-radius: 8px;
+            padding: 18px 0 14px 0;
+            min-height: 32px;
+            box-shadow: 0 2px 8px rgba(0,123,255,0.06);
+            border: 1px solid #cce6ff;
+        }
+        @media (max-width: 600px) {
+            .container {
+                max-width: 98vw;
+                padding: 18px 6vw 18px 6vw;
+            }
+            h1 {
+                font-size: 1.3rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Döviz Kuru Hesaplama</h1>
+        <label for="amount">Miktar</label>
+        <input type="number" id="amount" value="1" min="0" step="any">
+        <label for="from">Kaynak Para Birimi</label>
+        <select id="from"></select>
+        <label for="to">Hedef Para Birimi</label>
+        <select id="to"></select>
+        <button onclick="convertCurrency()">Hesapla</button>
+        <div class="result" id="result"></div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html> 
