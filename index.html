@@ -381,7 +381,8 @@
                  data-ux_mode="popup"
                  data-callback="handleCredentialResponse"
                  data-auto_prompt="false"
-                 data-cancel_on_tap_outside="false">
+                 data-cancel_on_tap_outside="false"
+                 data-error_callback="handleGoogleOAuthError">
             </div>
             <div class="g_id_signin"
                  data-type="standard"
@@ -390,6 +391,13 @@
                  data-text="signin_with"
                  data-size="large"
                  data-logo_alignment="left">
+            </div>
+            <!-- GitHub Pages için bilgi mesajı -->
+            <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #007bff;">
+                <p style="margin: 0; font-size: 0.9rem; color: #495057;">
+                    <strong>GitHub Pages Kullanıcıları:</strong><br>
+                    Google OAuth ayarlarınızı kontrol edin. Sorun yaşarsanız test girişi kullanabilirsiniz.
+                </p>
             </div>
         </div>
     </div>
@@ -465,32 +473,6 @@
                 <div class="update-time" id="updateTime"></div>
                 <div style="text-align: center;">
                     <button class="refresh-btn" onclick="loadCurrencyRates()">🔄 Verileri Yenile</button>
-                </div>
-            </div>
-            
-            <!-- İstatistiksel Analiz Tablosu -->
-            <div class="currency-table-container" style="flex: 2; min-width: 600px;">
-                <h2 class="currency-table-title">📈 Yıllık İstatistiksel Analiz</h2>
-                <table class="currency-table">
-                    <thead>
-                        <tr>
-                            <th>Piyasa</th>
-                            <th>En Yüksek</th>
-                            <th>En Düşük</th>
-                            <th>Ortalama</th>
-                            <th>Yıllık Değişim</th>
-                            <th>Trend</th>
-                        </tr>
-                    </thead>
-                    <tbody id="statsTableBody">
-                        <tr>
-                            <td colspan="6" class="loading">İstatistikler hesaplanıyor...</td>
-                        </tr>
-                    </tbody>
-                </table>
-                <div class="update-time" id="statsUpdateTime"></div>
-                <div style="text-align: center;">
-                    <button class="refresh-btn" onclick="loadStatistics()">📊 İstatistikleri Yenile</button>
                 </div>
             </div>
         </div>

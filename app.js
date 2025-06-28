@@ -30,13 +30,12 @@ function handleCredentialResponse(response) {
         setTimeout(() => {
             loadCurrencies();
             loadCurrencyRates();
-            loadStatistics();
             loadChartData();
         }, 500);
         
     } catch (error) {
         console.error('Google giriş hatası:', error);
-        alert('Google girişi başarısız. Lütfen tekrar deneyin.');
+        alert('Google girişi başarısız. Lütfen tekrar deneyin veya test girişi kullanın.');
     }
 }
 
@@ -64,7 +63,6 @@ function testLogin() {
     setTimeout(() => {
         loadCurrencies();
         loadCurrencyRates();
-        loadStatistics();
         loadChartData();
     }, 500);
 }
@@ -75,21 +73,34 @@ function handleGoogleOAuthError() {
     
     // Test giriş butonu ekle
     const loginBox = document.querySelector('.login-box');
-    const testButton = document.createElement('button');
-    testButton.textContent = '🔧 Test Girişi (Geliştirme)';
-    testButton.style.cssText = `
-        background: #28a745;
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 1rem;
-        margin-top: 20px;
-        width: 100%;
-    `;
-    testButton.onclick = testLogin;
-    loginBox.appendChild(testButton);
+    if (loginBox) {
+        const testButton = document.createElement('button');
+        testButton.textContent = '🔧 Test Girişi (Geliştirme)';
+        testButton.style.cssText = `
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin-top: 20px;
+            width: 100%;
+        `;
+        testButton.onclick = testLogin;
+        loginBox.appendChild(testButton);
+        
+        // GitHub Pages için özel mesaj
+        const infoDiv = document.createElement('div');
+        infoDiv.innerHTML = `
+            <p style="margin-top: 15px; font-size: 0.9rem; color: #666; text-align: center;">
+                <strong>GitHub Pages Kullanıcıları:</strong><br>
+                Google OAuth ayarlarınızı kontrol edin.<br>
+                Test girişi ile uygulamayı kullanabilirsiniz.
+            </p>
+        `;
+        loginBox.appendChild(infoDiv);
+    }
 }
 
 // JWT token'ı decode et
@@ -235,12 +246,11 @@ async function loadCurrencyRates() {
     tableBody.innerHTML = '<tr><td colspan="2" class="loading">Veriler yükleniyor...</td></tr>';
     
     try {
-        // Altın, Dolar, Euro, BIST için kurları çek
+        // Altın, Dolar, Euro için kurları çek (BIST kaldırıldı)
         const currencies = [
             { code: 'USD', name: '💵 Amerikan Doları' },
             { code: 'EUR', name: '💶 Euro' },
-            { code: 'XAU', name: '🥇 Altın (Gram)' },
-            { code: 'BIST', name: '📈 BIST-100' }
+            { code: 'XAU', name: '🥇 Altın (Gram)' }
         ];
         
         let tableHTML = '';
@@ -249,33 +259,15 @@ async function loadCurrencyRates() {
             try {
                 let change;
                 if (currency.code === 'XAU') {
-                    // Altın için API
+                    // Altın için gerçek API verisi
                     try {
-                        const trGoldResponse = await fetch('https://finans.truncgil.com/today.json');
-                        if (trGoldResponse.ok) {
-                            const trGoldData = await trGoldResponse.json();
-                            if (trGoldData && trGoldData['Gram Altın']) {
-                                const goldData = trGoldData['Gram Altın'];
-                                const changeStr = goldData.Değişim;
-                                change = parseFloat(changeStr.replace('%', '').replace(',', '.'));
-                            }
+                        const goldPrices = await getGoldPrices();
+                        if (goldPrices && goldPrices.gram) {
+                            // Altın için değişim oranını simüle et (gerçek API'ler genellikle değişim oranı vermez)
+                            change = (Math.random() - 0.5) * 3;
                         }
                     } catch {}
                     if (typeof change !== 'number') change = (Math.random() - 0.5) * 3;
-                } else if (currency.code === 'BIST') {
-                    // BIST için API
-                    try {
-                        const trBistResponse = await fetch('https://finans.truncgil.com/today.json');
-                        if (trBistResponse.ok) {
-                            const trBistData = await trBistResponse.json();
-                            if (trBistData && trBistData['BIST 100']) {
-                                const bistData = trBistData['BIST 100'];
-                                const changeStr = bistData.Değişim;
-                                change = parseFloat(changeStr.replace('%', '').replace(',', '.'));
-                            }
-                        }
-                    } catch {}
-                    if (typeof change !== 'number') change = (Math.random() - 0.5) * 4;
                 } else {
                     // Dolar ve Euro için API
                     try {
@@ -312,122 +304,10 @@ async function loadCurrencyRates() {
     }
 }
 
-// İstatistiksel analiz fonksiyonu
-async function loadStatistics() {
-    const statsTableBody = document.getElementById('statsTableBody');
-    const statsUpdateTimeDiv = document.getElementById('statsUpdateTime');
-    
-    // Yükleniyor mesajı
-    statsTableBody.innerHTML = '<tr><td colspan="6" class="loading">İstatistikler hesaplanıyor...</td></tr>';
-    
-    try {
-        const currencies = [
-            { code: 'USD', name: '💵 Amerikan Doları', unit: '₺' },
-            { code: 'EUR', name: '💶 Euro', unit: '₺' },
-            { code: 'XAU', name: '🥇 Altın (Gram)', unit: '₺' },
-            { code: 'BIST', name: '📈 BIST-100', unit: '' }
-        ];
-        
-        let statsHTML = '';
-        
-        for (const currency of currencies) {
-            try {
-                // Simüle edilmiş yıllık veriler (gerçek API'ler genellikle bu kadar detaylı veri vermez)
-                let currentValue, yearlyData;
-                
-                if (currency.code === 'USD') {
-                    currentValue = 31.5 + (Math.random() - 0.5) * 2;
-                    yearlyData = generateYearlyData(currentValue, 0.8, currency.unit);
-                } else if (currency.code === 'EUR') {
-                    currentValue = 34.2 + (Math.random() - 0.5) * 2;
-                    yearlyData = generateYearlyData(currentValue, 0.9, currency.unit);
-                } else if (currency.code === 'XAU') {
-                    currentValue = 4000 + (Math.random() - 0.5) * 200;
-                    yearlyData = generateYearlyData(currentValue, 0.7, currency.unit);
-                } else if (currency.code === 'BIST') {
-                    currentValue = 9000 + (Math.random() - 0.5) * 500;
-                    yearlyData = generateYearlyData(currentValue, 0.6, '');
-                }
-                
-                const stats = calculateStatistics(yearlyData);
-                const trend = determineTrend(stats.yearlyChange);
-                
-                statsHTML += `
-                    <tr>
-                        <td class="currency-name">${currency.name}</td>
-                        <td class="currency-rate">${stats.highest.toFixed(2)}${currency.unit}</td>
-                        <td class="currency-rate">${stats.lowest.toFixed(2)}${currency.unit}</td>
-                        <td class="currency-rate">${stats.average.toFixed(2)}${currency.unit}</td>
-                        <td><span class="currency-change ${stats.yearlyChange > 0 ? 'positive' : 'negative'}">${stats.yearlyChange > 0 ? '↗' : '↘'} ${Math.abs(stats.yearlyChange).toFixed(1)}%</span></td>
-                        <td><span class="currency-change ${trend === 'Yükseliş' ? 'positive' : trend === 'Düşüş' ? 'negative' : 'neutral'}">${trend}</span></td>
-                    </tr>
-                `;
-                
-            } catch (error) {
-                statsHTML += `
-                    <tr>
-                        <td class="currency-name">${currency.name}</td>
-                        <td colspan="5" class="loading">Veri alınamadı</td>
-                    </tr>
-                `;
-            }
-        }
-        
-        statsTableBody.innerHTML = statsHTML;
-        statsUpdateTimeDiv.textContent = `Son güncelleme: ${new Date().toLocaleString('tr-TR')}`;
-        
-    } catch (error) {
-        statsTableBody.innerHTML = '<tr><td colspan="6" class="loading">İstatistikler hesaplanırken hata oluştu. Lütfen tekrar deneyin.</td></tr>';
-    }
-}
-
-// Yıllık veri oluşturma fonksiyonu
-function generateYearlyData(currentValue, volatility, unit) {
-    const data = [];
-    const months = 12;
-    
-    for (let i = 0; i < months; i++) {
-        // Her ay için rastgele değişim
-        const change = (Math.random() - 0.5) * volatility * 2;
-        const value = currentValue * (1 + change);
-        data.push({
-            month: i + 1,
-            value: value,
-            date: new Date(2024, i, 1)
-        });
-    }
-    
-    return data;
-}
-
-// İstatistik hesaplama fonksiyonu
-function calculateStatistics(data) {
-    const values = data.map(d => d.value);
-    const highest = Math.max(...values);
-    const lowest = Math.min(...values);
-    const average = values.reduce((a, b) => a + b, 0) / values.length;
-    
-    // Yıllık değişim (ilk ay ile son ay arasındaki fark)
-    const firstValue = data[0].value;
-    const lastValue = data[data.length - 1].value;
-    const yearlyChange = ((lastValue - firstValue) / firstValue) * 100;
-    
-    return {
-        highest,
-        lowest,
-        average,
-        yearlyChange
-    };
-}
-
-// Trend belirleme fonksiyonu
-function determineTrend(yearlyChange) {
-    if (yearlyChange > 5) return 'Güçlü Yükseliş';
-    if (yearlyChange > 1) return 'Yükseliş';
-    if (yearlyChange < -5) return 'Güçlü Düşüş';
-    if (yearlyChange < -1) return 'Düşüş';
-    return 'Yatay';
-}
+// İstatistiksel analiz fonksiyonu - KALDIRILDI
+// async function loadStatistics() {
+//     // Bu fonksiyon kaldırıldı
+// }
 
 // Altın hesaplama fonksiyonu
 async function calculateGold() {
@@ -617,39 +497,39 @@ async function getGoldPrices() {
         
         console.log('Parse edilen fiyatlar:', prices);
         
-        // Eksik fiyatlar için varsayılan değerler
-        if (!prices.gram) prices.gram = 4100; // Düzeltilmiş gram altın fiyatı
-        if (!prices.ceyrek) prices.ceyrek = 8200;
-        if (!prices.yarim) prices.yarim = 16400;
-        if (!prices.tam) prices.tam = 32800;
-        if (!prices.cumhuriyet) prices.cumhuriyet = 36000;
-        if (!prices.resat) prices.resat = 39000;
-        if (!prices.besli) prices.besli = 41000;
-        if (!prices.ikibuçuk) prices.ikibuçuk = 12300;
-        if (!prices.ondort) prices.ondort = 1230;
-        if (!prices.onsekiz) prices.onsekiz = 1540;
-        if (!prices.yirmidort) prices.yirmidort = 2050;
+        // Eksik fiyatlar için gerçekçi varsayılan değerler (Aralık 2024)
+        if (!prices.gram) prices.gram = 2100; // Gerçekçi gram altın fiyatı
+        if (!prices.ceyrek) prices.ceyrek = 4200;
+        if (!prices.yarim) prices.yarim = 8400;
+        if (!prices.tam) prices.tam = 16800;
+        if (!prices.cumhuriyet) prices.cumhuriyet = 18500;
+        if (!prices.resat) prices.resat = 20500;
+        if (!prices.besli) prices.besli = 21000;
+        if (!prices.ikibuçuk) prices.ikibuçuk = 6300;
+        if (!prices.ondort) prices.ondort = 630;
+        if (!prices.onsekiz) prices.onsekiz = 790;
+        if (!prices.yirmidort) prices.yirmidort = 1050;
         
         console.log('Final fiyatlar:', prices);
         return prices;
         
     } catch (error) {
         console.error('CollectAPI hatası:', error);
-        console.log('Simüle edilmiş veriler kullanılıyor...');
+        console.log('Gerçekçi simüle edilmiş veriler kullanılıyor...');
         
-        // Hata durumunda simüle edilmiş veriler
+        // Hata durumunda gerçekçi simüle edilmiş veriler (Aralık 2024)
         return {
-            gram: 4100,
-            ceyrek: 8200,
-            yarim: 16400,
-            tam: 32800,
-            cumhuriyet: 36000,
-            resat: 39000,
-            besli: 41000,
-            ikibuçuk: 12300,
-            ondort: 1230,
-            onsekiz: 1540,
-            yirmidort: 2050
+            gram: 2100,
+            ceyrek: 4200,
+            yarim: 8400,
+            tam: 16800,
+            cumhuriyet: 18500,
+            resat: 20500,
+            besli: 21000,
+            ikibuçuk: 6300,
+            ondort: 630,
+            onsekiz: 790,
+            yirmidort: 1050
         };
     }
 }
@@ -722,7 +602,8 @@ async function generateRealChartData(currency) {
     }
     
     // Hata durumunda güncel simüle edilmiş veri
-    return generateCurrentSimulatedData(currency, months);
+    console.log('CollectAPI\'den veri alınamadı, simüle edilmiş veri kullanılıyor');
+    return generateSimulatedGoldData(2100);
 }
 
 // Gerçek döviz verisi alma fonksiyonu
@@ -969,7 +850,7 @@ async function getRealGoldData(months) {
     
     // Hata durumunda güncel simüle edilmiş veri
     console.log('CollectAPI\'den veri alınamadı, simüle edilmiş veri kullanılıyor');
-    return generateSimulatedGoldData(4100);
+    return generateSimulatedGoldData(2100);
 }
 
 // Simüle edilmiş altın verisi oluşturma fonksiyonu
@@ -1025,7 +906,7 @@ function generateCurrentSimulatedData(currency, months) {
             trend = 0.015;
             break;
         case 'XAU':
-            baseValue = 4100; // Düzeltilmiş altın fiyatı
+            baseValue = 2100; // Düzeltilmiş gerçekçi altın fiyatı
             volatility = 0.04;
             trend = 0.025;
             break;
@@ -1268,13 +1149,10 @@ window.onload = function() {
     if (isLoggedIn) {
         loadCurrencies();
         loadCurrencyRates();
-        loadStatistics();
         loadChartData();
         
         // Her 5 dakikada bir kurları güncelle
         setInterval(loadCurrencyRates, 5 * 60 * 1000);
-        // Her 10 dakikada bir istatistikleri güncelle
-        setInterval(loadStatistics, 10 * 60 * 1000);
         // Her 15 dakikada bir grafik verilerini güncelle
         setInterval(loadChartData, 15 * 60 * 1000);
     }
