@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Döviz Kuru Hesaplama</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -12,6 +14,100 @@
             padding: 0;
             min-height: 100vh;
         }
+        
+        /* Giriş Sistemi Stilleri */
+        .login-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 90%;
+        }
+        
+        .login-title {
+            font-size: 2rem;
+            color: #2d3a4b;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        
+        .login-subtitle {
+            color: #6c757d;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+        
+        .user-profile {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 100;
+        }
+        
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .user-name {
+            font-weight: 600;
+            color: #2d3a4b;
+            font-size: 0.9rem;
+        }
+        
+        .user-email {
+            color: #6c757d;
+            font-size: 0.8rem;
+        }
+        
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: background 0.3s;
+        }
+        
+        .logout-btn:hover {
+            background: #c82333;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+        
         .container {
             max-width: 420px;
             margin: 60px auto;
@@ -202,12 +298,50 @@
             font-style: italic;
         }
         
+        /* Grafik Container Stilleri */
+        .chart-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            background: #fff;
+            padding: 30px;
+            border-radius: 18px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+            border: 1px solid #e3e3e3;
+        }
+        
+        .chart-title {
+            text-align: center;
+            color: #2d3a4b;
+            margin-bottom: 25px;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            margin: 20px 0;
+        }
+        
+        .chart-controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .chart-select {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #bfc9d1;
+            margin: 0 10px;
+            font-size: 0.9rem;
+        }
+        
         @media (max-width: 600px) {
-            .container, .currency-table-container {
+            .container, .currency-table-container, .chart-container {
                 max-width: 98vw;
                 padding: 18px 6vw 18px 6vw;
             }
-            h1, .currency-table-title {
+            h1, .currency-table-title, .chart-title {
                 font-size: 1.3rem;
             }
             .currency-table th,
@@ -217,6 +351,14 @@
             }
             .currency-rate {
                 font-size: 1rem;
+            }
+            .chart-wrapper {
+                height: 300px;
+            }
+            .user-profile {
+                top: 10px;
+                right: 10px;
+                padding: 10px;
             }
             /* Yan yana tablolar için responsive */
             .currency-table-container[style*="flex"] {
@@ -228,93 +370,153 @@
     </style>
 </head>
 <body>
-    <!-- Hesaplama Alanları -->
-    <div style="display: flex; gap: 20px; max-width: 1400px; margin: 60px auto; flex-wrap: wrap;">
-        <!-- Döviz Kuru Hesaplama -->
-        <div class="container" style="flex: 1; min-width: 400px;">
-            <h1>Döviz Kuru Hesaplama</h1>
-            <label for="amount">Miktar</label>
-            <input type="number" id="amount" value="1" min="0" step="any">
-            <label for="from">Kaynak Para Birimi</label>
-            <select id="from"></select>
-            <label for="to">Hedef Para Birimi</label>
-            <select id="to"></select>
-            <button onclick="convertCurrency()">Hesapla</button>
-            <div class="result" id="result"></div>
-        </div>
-        
-        <!-- Altın Hesaplama Alanı -->
-        <div class="container" style="flex: 1; min-width: 400px;">
-            <h1>🥇 Altın Hesaplama</h1>
-            <label for="goldAmount">Miktar</label>
-            <input type="number" id="goldAmount" value="1" min="0" step="any">
-            <label for="goldType">Altın Türü</label>
-            <select id="goldType">
-                <option value="gram">Gram Altın</option>
-                <option value="ceyrek">Çeyrek Altın</option>
-                <option value="yarim">Yarım Altın</option>
-                <option value="tam">Tam Altın</option>
-                <option value="cumhuriyet">Cumhuriyet Altını</option>
-                <option value="resat">Reşat Altını</option>
-                <option value="besli">Beşli Altın</option>
-                <option value="ikibuçuk">İkibuçuk Altın</option>
-                <option value="ondort">14 Ayar Altın</option>
-                <option value="onsekiz">18 Ayar Altın</option>
-                <option value="yirmidort">24 Ayar Altın</option>
-            </select>
-            <button onclick="calculateGold()">Altın Hesapla</button>
-            <div class="result" id="goldResult"></div>
+    <!-- Giriş Sistemi -->
+    <div id="loginContainer" class="login-container">
+        <div class="login-box">
+            <h2 class="login-title">🏦 Döviz Kuru Hesaplama</h2>
+            <p class="login-subtitle">Devam etmek için Google hesabınızla giriş yapın</p>
+            <div id="g_id_onload"
+                 data-client_id="141766659672-q4ej48tb4supelrknvil9b1ko0j2sojk.apps.googleusercontent.com"
+                 data-context="signin"
+                 data-ux_mode="popup"
+                 data-callback="handleCredentialResponse"
+                 data-auto_prompt="false"
+                 data-cancel_on_tap_outside="false">
+            </div>
+            <div class="g_id_signin"
+                 data-type="standard"
+                 data-shape="rectangular"
+                 data-theme="outline"
+                 data-text="signin_with"
+                 data-size="large"
+                 data-logo_alignment="left">
+            </div>
         </div>
     </div>
-    
-    <!-- Döviz Kurları Tablosu -->
-    <div style="display: flex; gap: 20px; max-width: 1400px; margin: 40px auto; flex-wrap: wrap;">
-        <!-- Piyasa Yönü Tablosu -->
-        <div class="currency-table-container" style="flex: 1; min-width: 400px;">
-            <h2 class="currency-table-title">📊 Piyasa Yönü</h2>
-            <table class="currency-table">
-                <thead>
-                    <tr>
-                        <th>Piyasa</th>
-                        <th>Yön</th>
-                    </tr>
-                </thead>
-                <tbody id="currencyTableBody">
-                    <tr>
-                        <td colspan="2" class="loading">Veriler yükleniyor...</td>
-                    </tr>
-                </tbody>
-            </table>
-            <div class="update-time" id="updateTime"></div>
-            <div style="text-align: center;">
-                <button class="refresh-btn" onclick="loadCurrencyRates()">🔄 Verileri Yenile</button>
+
+    <!-- Kullanıcı Profili -->
+    <div id="userProfile" class="user-profile hidden">
+        <img id="userAvatar" class="user-avatar" src="" alt="Profil">
+        <div class="user-info">
+            <div id="userName" class="user-name"></div>
+            <div id="userEmail" class="user-email"></div>
+        </div>
+        <button class="logout-btn" onclick="logout()">Çıkış</button>
+    </div>
+
+    <!-- Hesaplama Alanları -->
+    <div id="mainContent" class="hidden">
+        <div style="display: flex; gap: 20px; max-width: 1400px; margin: 60px auto; flex-wrap: wrap;">
+            <!-- Döviz Kuru Hesaplama -->
+            <div class="container" style="flex: 1; min-width: 400px;">
+                <h1>Döviz Kuru Hesaplama</h1>
+                <label for="amount">Miktar</label>
+                <input type="number" id="amount" value="1" min="0" step="any">
+                <label for="from">Kaynak Para Birimi</label>
+                <select id="from"></select>
+                <label for="to">Hedef Para Birimi</label>
+                <select id="to"></select>
+                <button onclick="convertCurrency()">Hesapla</button>
+                <div class="result" id="result"></div>
+            </div>
+            
+            <!-- Altın Hesaplama Alanı -->
+            <div class="container" style="flex: 1; min-width: 400px;">
+                <h1>🥇 Altın Hesaplama</h1>
+                <label for="goldAmount">Miktar</label>
+                <input type="number" id="goldAmount" value="1" min="0" step="any">
+                <label for="goldType">Altın Türü</label>
+                <select id="goldType">
+                    <option value="gram">Gram Altın</option>
+                    <option value="ceyrek">Çeyrek Altın</option>
+                    <option value="yarim">Yarım Altın</option>
+                    <option value="tam">Tam Altın</option>
+                    <option value="cumhuriyet">Cumhuriyet Altını</option>
+                    <option value="resat">Reşat Altını</option>
+                    <option value="besli">Beşli Altın</option>
+                    <option value="ikibuçuk">İkibuçuk Altın</option>
+                    <option value="ondort">14 Ayar Altın</option>
+                    <option value="onsekiz">18 Ayar Altın</option>
+                    <option value="yirmidort">24 Ayar Altın</option>
+                </select>
+                <button onclick="calculateGold()">Altın Hesapla</button>
+                <div class="result" id="goldResult"></div>
             </div>
         </div>
         
-        <!-- İstatistiksel Analiz Tablosu -->
-        <div class="currency-table-container" style="flex: 2; min-width: 600px;">
-            <h2 class="currency-table-title">📈 Yıllık İstatistiksel Analiz</h2>
-            <table class="currency-table">
-                <thead>
-                    <tr>
-                        <th>Piyasa</th>
-                        <th>En Yüksek</th>
-                        <th>En Düşük</th>
-                        <th>Ortalama</th>
-                        <th>Yıllık Değişim</th>
-                        <th>Trend</th>
-                    </tr>
-                </thead>
-                <tbody id="statsTableBody">
-                    <tr>
-                        <td colspan="6" class="loading">İstatistikler hesaplanıyor...</td>
-                    </tr>
-                </tbody>
-            </table>
-            <div class="update-time" id="statsUpdateTime"></div>
-            <div style="text-align: center;">
-                <button class="refresh-btn" onclick="loadStatistics()">📊 İstatistikleri Yenile</button>
+        <!-- Döviz Kurları Tablosu -->
+        <div style="display: flex; gap: 20px; max-width: 1400px; margin: 40px auto; flex-wrap: wrap;">
+            <!-- Piyasa Yönü Tablosu -->
+            <div class="currency-table-container" style="flex: 1; min-width: 400px;">
+                <h2 class="currency-table-title">📊 Piyasa Yönü</h2>
+                <table class="currency-table">
+                    <thead>
+                        <tr>
+                            <th>Piyasa</th>
+                            <th>Yön</th>
+                        </tr>
+                    </thead>
+                    <tbody id="currencyTableBody">
+                        <tr>
+                            <td colspan="2" class="loading">Veriler yükleniyor...</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="update-time" id="updateTime"></div>
+                <div style="text-align: center;">
+                    <button class="refresh-btn" onclick="loadCurrencyRates()">🔄 Verileri Yenile</button>
+                </div>
             </div>
+            
+            <!-- İstatistiksel Analiz Tablosu -->
+            <div class="currency-table-container" style="flex: 2; min-width: 600px;">
+                <h2 class="currency-table-title">📈 Yıllık İstatistiksel Analiz</h2>
+                <table class="currency-table">
+                    <thead>
+                        <tr>
+                            <th>Piyasa</th>
+                            <th>En Yüksek</th>
+                            <th>En Düşük</th>
+                            <th>Ortalama</th>
+                            <th>Yıllık Değişim</th>
+                            <th>Trend</th>
+                        </tr>
+                    </thead>
+                    <tbody id="statsTableBody">
+                        <tr>
+                            <td colspan="6" class="loading">İstatistikler hesaplanıyor...</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="update-time" id="statsUpdateTime"></div>
+                <div style="text-align: center;">
+                    <button class="refresh-btn" onclick="loadStatistics()">📊 İstatistikleri Yenile</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Yıllık Grafik Bölümü -->
+        <div class="chart-container">
+            <h2 class="chart-title">📊 Yıllık Piyasa Grafiği</h2>
+            <div class="chart-controls">
+                <label for="chartCurrency">Para Birimi:</label>
+                <select id="chartCurrency" class="chart-select" onchange="updateChart()">
+                    <option value="USD">💵 Amerikan Doları</option>
+                    <option value="EUR">💶 Euro</option>
+                    <option value="XAU">🥇 Altın (Gram)</option>
+                </select>
+                <label for="chartPeriod">Dönem:</label>
+                <select id="chartPeriod" class="chart-select" onchange="updateChart()">
+                    <option value="12">Son 12 Ay</option>
+                    <option value="6">Son 6 Ay</option>
+                    <option value="3">Son 3 Ay</option>
+                </select>
+                <button class="refresh-btn" onclick="loadChartData()">🔄 Grafiği Yenile</button>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="yearlyChart"></canvas>
+            </div>
+            <div class="update-time" id="chartUpdateTime"></div>
         </div>
     </div>
     
