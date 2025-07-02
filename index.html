@@ -17,15 +17,17 @@
         
         /* Giriş Sistemi Stilleri */
         .login-container {
+            background: linear-gradient(270deg, #00c3ff, #ffff1c, #ff5e62, #00c3ff);
+            background-size: 800% 800%;
+            animation: gradientBG 16s ease infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: flex;
-            justify-content: center;
-            align-items: center;
             z-index: 1000;
         }
         
@@ -366,6 +368,46 @@
                 min-width: 100% !important;
                 margin-bottom: 20px;
             }
+        }
+        
+        .g_id_signin {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .g_id_signin::before {
+            content: "";
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 15px 50px #000);
+            border-radius: 20px;
+            animation: rotating 4s linear infinite;
+            animation-delay: -1s;
+            top: 0;
+            left: 0;
+            z-index: -1;
+        }
+        
+        .g_id_signin::after {
+            content: "";
+            position: absolute;
+            inset: 4px;
+            background: #22d39a;
+            border-radius: 15px;
+            border: 8px solid #25252b;
+            z-index: -1;
+        }
+        
+        @keyframes rotating {
+            0% { transform: rotate(0deg);}
+            100% { transform: rotate(360deg);}
+        }
+        
+        @keyframes gradientBG {
+            0% {background-position:0% 50%}
+            50% {background-position:100% 50%}
+            100% {background-position:0% 50%}
         }
     </style>
 </head>
